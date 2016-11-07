@@ -41,6 +41,9 @@ app.use(loggerBunyan.errorLogger(accessLoggerConfig));
 
 app.use('/', routes);
 
+app.set('views', './app/views')
+app.set('view engine', 'jade')
+
 function serve(application) {
 
   var server = http.createServer(application);

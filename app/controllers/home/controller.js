@@ -1,5 +1,5 @@
 'use strict';
 
 module.exports = function homeControllerController(req, res) {
-  res.send('It works!');
+  res.render('index', { title: 'Hey', message: 'Hello there!' })
 };
