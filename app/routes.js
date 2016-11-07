@@ -15,5 +15,6 @@ var controller = commons.controller
   ;
 
 // generator - insert routes here
+router.get('/home/controller', controller('home/controller'));
 
 module.exports = router;

@@ -39,7 +39,7 @@ app.use(loggerBunyan(accessLoggerConfig));
 app.use(messageHandler(config.logging));
 app.use(loggerBunyan.errorLogger(accessLoggerConfig));
 
-app.use('/api/v1', routes);
+app.use('/', routes);
 
 function serve(application) {
 
