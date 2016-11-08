@@ -6,6 +6,8 @@
     "start": "node ./app/app.js"
   },
   "dependencies": {
+    "bitcore-explorers": "^1.0.1",
+    "bitcore-lib": "^0.13.19",
     "bluebird": "^2.9.34",
     "body-parser": "^1.13.3",
     "bunyan": "^1.4.0",
@@ -25,6 +27,7 @@
     "pug": "^2.0.0-beta6",
     "request": "^2.60.0",
     "rx": "^3.0.1",
-    "serve-favicon": "~2.3.0"
+    "serve-favicon": "~2.3.0",
+    "sjcl": "^1.0.6"
   }
 }
