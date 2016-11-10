@@ -4,98 +4,93 @@ var commons = require('../commons.js');
 var bitcore = require('bitcore-lib');
 
 var bitcoreExplorers = require('bitcore-explorers');
-var Script  = bitcore.Script;
+var Script = bitcore.Script;
 
 var sjclHash = require('sjcl').hash;
 
-var proto
-  , repo = commons.repository
-  ;
+var Insight = require('bitcore-explorers').Insight;
+
+var proto, repo = commons.repository;
+
+var network = 'testnet';
 
 module.exports = function MyService() {
-  var network = 'testnet';
-
-  // origin: grandparent
-  // destination: grandson
-
-  var dest = {};
-  dest.pubKey = '';
-
-
-  var Insight = require('bitcore-explorers').Insight
-
-  // create a p2sh multisig output
-  // var pubkeys = [
-  //   new PublicKey('022df8750480ad5b26950b25c7ba79d3e37d75f640f8e5d9bcd5b150a0f85014da'),
-  //   new PublicKey('03e3818b65bcc73a7d64064106a859cc1a5a728c4345ff0b641209fba0d90de6e9'),
-  //   new PublicKey('021f2f6e1e50cb6a953935c3601284925decd3fd21bc445712576873fb8c6ebc18'),
-  // ];
-  // var redeemScript = Script.buildMultisigOut(pubkeys, 2);
-  // var script = redeemScript.toScriptHashOut();
-  // assert(script.toString() === 'OP_HASH160 20 0x620a6eeaf538ec9eb89b6ae83f2ed8ef98566a03 OP_EQUAL');
-  //
-
-  var origin = {};
-  origin.privKey = '';
-  origin.pubKey = '';
-  origin.getUtxos = function(address) {
-    var UTXOS = null;
-    insight.getUnspentUtxos(address, function (err, utxos) { UTXOS = utxos });
-    return UTXOS;
-  };
-  origin.startContract = function(fromAddress, amount, oracle, dest) {
-    var contract = 'if (true) { return ' + dest.pubKey + ' }';
-
-    var oracleScript = Script()
-        .add(hash(contract)) // TODO: check !
-        .add('OP_DROP 2') // TODO: check!
-        .add(dest.pubKey) // TODO: check!
-        .add(oracle.pubKey) // TODO: check!
-        .add('CHECKMULTISIG');
-    // hash(contract) + ' OP_DROP 2 ' + dest.pubKey + ' ' + oracle.pubKey + ' CHECKMULTISIG'
-
-    // var script = redeemScript.toScriptHashOut();
-
-    var utxos = this.getUtxos(fromAddress);
-    var incompleteTx = bitcore.Transaction()
-        .from(utxos)
-        .addOutput(oracleScript.toScriptHashOut())
-        .to(address, amount) // TODO: check!
-        // .change(address) // TODO: add me eventually
-        // .fee(100000) // TODO: add me eventually
-        .sign(this.privkey);
-  };
-
-
-  var oracle = {}; // FIXME: cleanup
-  oracle.pubKey = ''; // TODO: check!
-  oracle.privKey = ''; // TODO: check!
-  oracle.measurement = function(expression, outputScript, incompleteTx) {
-    if (hash(expression) != outputScript) { // TODO: check!
-      throw "";
+    class KeyedEntity {
+        constructor(privKey, pubKey) {
+            this.privKey = privKey;
+            this.pubKey = pubKey;
+        }
     }
-    if (evaluate(expression) != outputScript.destinationAddress) { // TODO: check!
-      throw "";
+
+    class ContractResponse {
+        constructor(pubKey, amount) {
+            this.pubKey = pubKey;
+            this.amount = amount;
+        }
     }
-    incompleteTx.sign();
-    return incompleteTx; // TODO: send to dest
-  };
 
-  // var privKey = bitcore.PrivateKey(network); // TODO bitcore.PrivateKey.fromWIF(...);
-  // var oraclesPubKey = ''; // TODO
+    class Origin extends KeyedEntity { // 'grandparent'
+        getUtxos() {
+            var _utxos = null;
+            insight.getUnspentUtxos(address, (error, utxos) => {
+                    if (error) { throw error }
+                    _utxos = utxos;
+                }
+            );
+            while(!_utxos) {}; // FIXME: ugly as hell
+            return _utxos;
+        }
 
-  // this.call = function() {
-  //   // crear output
-  //   // var inputScript = Script('OP_1');
-  //   var script = "if (true) return (10.0, 1JxgRXEHBi86zYzHN2U4KMyRCg4LvwNUrp);";
-  //   var scriptsHash = sjclHash.sha256(hash);
-  //
-  //    var tx = bitcore.Transaction()
-  //     .from(originUtxos)
-  //     .script();
-  //
-  //   var outputScript = Script(scriptsHash + ' OP_DROP 2 ' + destsPubKey + ' ' + oraclesPubKey + ' CHECKMULTISIG');
-  // }
+        startContract(expression, fromAddress, amount, oracle, dest) {
+            // TODO: multiply amount by the minimum allowed (10^5 satoshis?)
+            var contract = `if (${expression}) { return new ContractResponse(${dest.pubKey}, ${amount}) }`;
+
+            var oracleScript = Script()
+                .add(hash(contract)) // TODO: check !
+                .add('OP_DROP 2') // TODO: check!
+                .add(dest.pubKey) // TODO: check!
+                .add(oracle.pubKey) // TODO: check!
+                .add('CHECKMULTISIG');
+
+            var utxos = this.getUtxos(fromAddress);
+
+            var incompleteTx = bitcore.Transaction()
+                .from(utxos)
+                .addOutput(oracleScript.toScriptHashOut())
+                .to(address, amount) // TODO: check!
+                // .change(address) // TODO: add me eventually
+                // .fee(100000) // TODO: add me eventually
+                .sign(this.privkey);
+            return incompleteTx;
+        }
+    }
+
+    class Destination extends KeyedEntity { // destination: grandson
+        // TODO: add logic!
+    }
+
+    class Origin extends KeyedEntity {
+        measurement(expression, outputScript, incompleteTx) {
+            if (hash(expression) != outputScript) { // TODO: check!
+                throw "Mismatching hash";
+            }
+            if (evaluate(expression) != outputScript.destinationAddress) { // TODO: check!
+                throw "Expression not true!";
+            }
+            var completeTx = incompleteTx.sign();
+            return completeTx; // TODO: send to dest... or just broadcast it
+        }
+    }
+
+    var origin = new Origin('', ''); // TODO: check!
+    var dest = new Destination('', ''); // TODO: check!
+    var oracle = new Oracle('', ''); // TODO: check!
+
+    var incompleteTx = origin.startContract('true', fromAddress, 1000000, oracle, dest);
+    // var completeTx = oracle.measurement(???, ???, ???); TODO: continue code!
+
+    // var privKey = bitcore.PrivateKey(network); // TODO bitcore.PrivateKey.fromWIF(...);
+    // var oraclesPubKey = ''; // TODO
 };
 
 proto = module.exports.prototype;
