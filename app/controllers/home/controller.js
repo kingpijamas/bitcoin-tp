@@ -1,5 +1,9 @@
 'use strict';
 
+var commons = require('../../commons.js');
+
 module.exports = function homeControllerController(req, res) {
-  res.render('index', { title: 'Hey', message: 'Hello there!' })
+    var myService = commons.service("my");
+    myService(); // call the service
+    res.render('index', {title: 'Hey', message: 'Hello there!'})
 };

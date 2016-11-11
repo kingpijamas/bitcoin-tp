@@ -29,7 +29,7 @@ var accessLoggerConfig = _.extend({excludes: '*'}, config.logging);
 
 app.use(cors(config.cors));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 app.use(jwt(config.jwt));
 
@@ -41,33 +41,31 @@ app.use(loggerBunyan.errorLogger(accessLoggerConfig));
 
 app.use('/', routes);
 
-app.set('views', './app/views')
-app.set('view engine', 'jade')
+app.set('views', './app/views');
+app.set('view engine', 'jade');
 
 function serve(application) {
 
-  var server = http.createServer(application);
+    var server = http.createServer(application);
 
-  if (process.env.NODE_ENV === 'production') {
-    new cluster({
-      port: config.api.port,
-      pids: config.api.clusterPidsDir,
-      monPort: config.api.clusterMonitoringPort
-
-    }).listen(function (cb) {
-      logger.info('Cluster node ready on port', config.api.port);
-      cb(server);
-    });
-
-  } else {
-    server.listen(config.api.port, function (err) {
-      if (err) {
-        logger.error(err);
-        throw err;
-      }
-      logger.info('Express server listening on port', config.api.port);
-    });
-  }
+    if (process.env.NODE_ENV === 'production') {
+        new cluster({
+            port: config.api.port,
+            pids: config.api.clusterPidsDir,
+            monPort: config.api.clusterMonitoringPort
+        }).listen(function (cb) {
+            logger.info('Cluster node ready on port', config.api.port);
+            cb(server);
+        });
+    } else {
+        server.listen(config.api.port, function (err) {
+            if (err) {
+                logger.error(err);
+                throw err;
+            }
+            logger.info('Express server listening on port', config.api.port);
+        });
+    }
 }
 
 serve(app);

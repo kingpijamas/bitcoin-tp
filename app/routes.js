@@ -6,13 +6,9 @@
  * generator won't know where to insert new route definitions.
  */
 
-var commons = require('./commons.js')
-  , express = require('express')
-  ;
+var commons = require('./commons.js'), express = require('express');
 
-var controller = commons.controller
-  , router = new express.Router()
-  ;
+var controller = commons.controller, router = new express.Router();
 
 // generator - insert routes here
 router.get('/home/controller', controller('home/controller'));
