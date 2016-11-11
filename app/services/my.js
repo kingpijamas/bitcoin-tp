@@ -16,16 +16,12 @@ var network = 'testnet';
 
 module.exports = function MyService() {
     class KeyedEntity {
-        constructor(privKey, pubKey) {
-            this.privKey = privKey;
-            this.pubKey = pubKey;
+        constructor(privKeyWIF) {
+            this.privKey = bitcore.PrivateKey.fromWIF(privKeyWIF); // TODO: polymorphism'd be nice
         }
-    }
 
-    class ContractResponse {
-        constructor(pubKey, amount) {
-            this.pubKey = pubKey;
-            this.amount = amount;
+        get pubKey() {
+            this.privKey.toPublicKey();
         }
     }
 
@@ -33,11 +29,10 @@ module.exports = function MyService() {
         getUtxos() {
             var _utxos = null;
             insight.getUnspentUtxos(address, (error, utxos) => {
-                    if (error) { throw error }
-                    _utxos = utxos;
-                }
-            );
-            while(!_utxos) {}; // FIXME: ugly as hell
+                if (error) { throw error }
+                _utxos = utxos;
+            });
+            while (!_utxos) {} // FIXME: ugly as hell
             return _utxos;
         }
 
@@ -65,26 +60,44 @@ module.exports = function MyService() {
         }
     }
 
+    class ContractResponse {
+        constructor(pubKey, amount) {
+            this.pubKey = pubKey;
+            this.amount = amount;
+        }
+    }
+
     class Destination extends KeyedEntity { // destination: grandson
         // TODO: add logic!
     }
 
-    class Origin extends KeyedEntity {
+    class Oracle extends KeyedEntity {
         measurement(expression, outputScript, incompleteTx) {
-            if (hash(expression) != outputScript) { // TODO: check!
+            var hashedExpression = this.hash(expression);
+            if (hashedExpression != outputScript) { // TODO: check!
                 throw "Mismatching hash";
             }
-            if (evaluate(expression) != outputScript.destinationAddress) { // TODO: check!
+            var expressionResult = eval(expression);
+            if (expressionResult != outputScript.destinationAddress) { // TODO: check!
                 throw "Expression not true!";
             }
-            var completeTx = incompleteTx.sign();
+            var completeTx = incompleteTx.sign(this.privKey);
             return completeTx; // TODO: send to dest... or just broadcast it
+        }
+
+        hash(expression) {
+            return bitcore.crypto.Hash.sha256(bitcore.Buffer(expression));
         }
     }
 
-    var origin = new Origin('', ''); // TODO: check!
-    var dest = new Destination('', ''); // TODO: check!
-    var oracle = new Oracle('', ''); // TODO: check!
+    var originPrivKeyWIF = bitcore.PrivateKey(network).toWIF(); // TODO: receive from user input!
+    var origin = new Origin(originPrivKeyWIF); // TODO: check!
+
+    var destPrivKeyWIF = bitcore.PrivateKey(network).toWIF(); // TODO: receive from user input!
+    var dest = new Destination(destPrivKeyWIF); // TODO: check!
+
+    var oraclePrivKeyWIF = bitcore.PrivateKey(network).toWIF(); // TODO: load from file in server!
+    var oracle = new Oracle(oraclePrivKeyWIF); // TODO: check!
 
     var incompleteTx = origin.startContract('true', fromAddress, 1000000, oracle, dest);
     // var completeTx = oracle.measurement(???, ???, ???); TODO: continue code!
