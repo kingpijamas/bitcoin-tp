@@ -15,6 +15,10 @@ var proto, repo = commons.repository;
 var network = 'testnet';
 
 module.exports = function MyService() {
+    var safeHash = (value) => {
+        return bitcore.crypto.Hash.sha256(bitcore.Buffer(value))
+    };
+
     class KeyedEntity {
         constructor(privKeyWIF) {
             this.privKey = bitcore.PrivateKey.fromWIF(privKeyWIF); // TODO: polymorphism'd be nice
@@ -38,10 +42,11 @@ module.exports = function MyService() {
 
         startContract(expression, fromAddress, amount, oracle, dest) {
             // TODO: multiply amount by the minimum allowed (10^5 satoshis?)
+            // FIXME: change this for custom JSON evaluation!
             var contract = `if (${expression}) { return new ContractResponse(${dest.pubKey}, ${amount}) }`;
 
             var oracleScript = Script()
-                .add(hash(contract)) // TODO: check !
+                .add(safeHash(contract)) // TODO: check !
                 .add('OP_DROP 2') // TODO: check!
                 .add(dest.pubKey) // TODO: check!
                 .add(oracle.pubKey) // TODO: check!
@@ -73,20 +78,16 @@ module.exports = function MyService() {
 
     class Oracle extends KeyedEntity {
         measurement(expression, outputScript, incompleteTx) {
-            var hashedExpression = this.hash(expression);
+            var hashedExpression = safeHash(expression);
             if (hashedExpression != outputScript) { // TODO: check!
                 throw "Mismatching hash";
             }
-            var expressionResult = eval(expression);
+            var expressionResult = eval(expression); // FIXME: change this for custom JSON evaluation!
             if (expressionResult != outputScript.destinationAddress) { // TODO: check!
                 throw "Expression not true!";
             }
             var completeTx = incompleteTx.sign(this.privKey);
             return completeTx; // TODO: send to dest... or just broadcast it
-        }
-
-        hash(expression) {
-            return bitcore.crypto.Hash.sha256(bitcore.Buffer(expression));
         }
     }
 
