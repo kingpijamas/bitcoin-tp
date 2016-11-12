@@ -96,7 +96,7 @@ module.exports = function MyService() {
 
     class Oracle extends KeyedEntity {
         measurement(contract) {
-            if (safeHash(contract.expression) != safeHash(contract.expression)) {
+            if (safeHash(contract.expression) != safeHash(contract.expression)) { // FIXME: duh! fetch it from the tx itself I suppose :P
                 throw "Contract mismatch!";
             }
             let result = eval(contract.expression);
