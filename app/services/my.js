@@ -47,10 +47,12 @@ module.exports = function MyService() {
             };
 
             const oracleScript = Script()
-                .add(safeHash(contract.expression)) // TODO: check !
-                .add('OP_DROP 2') // TODO: check!
-                .add(dest.pubKey) // TODO: check!
-                .add(oracle.pubKey) // TODO: check!
+                .add(safeHash(contract.expression))
+                .add('OP_DROP')
+                .add('OP_2')
+                .add(dest.pubKey)
+                .add(oracle.pubKey)
+                .add('OP_2') //To make it checkMultisign
                 .add('CHECKMULTISIG');
 
             return this.getUtxos(fromAddress).then((utxos) => {
@@ -95,7 +97,7 @@ module.exports = function MyService() {
     }
 
     class Oracle extends KeyedEntity {
-        measurement(contract) {
+        measurement(contract, oracleScript) {
             if (safeHash(contract.expression) != safeHash(contract.expression)) { // FIXME: duh! fetch it from the tx itself I suppose :P
                 throw "Contract mismatch!";
             }
