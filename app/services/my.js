@@ -100,15 +100,15 @@ module.exports = function MyService() {
                 throw "Contract mismatch!";
             }
             let result = eval(contract.expression);
-            if (result.destAddress != contract.destAddress) { // TODO: check!
+            if (result.destAddress != contract.destAddress) { // TODO: check! maybe the amount should match contract.amount as well
                 throw "Mismatching expression address!";
             }
-            console.log("Contract approved!");
+            console.log(`Contract: ${JSON.stringify(contract)} approved!`);
             return contract.incompleteTx.sign(this.privKey); // TODO: send to dest... or just broadcast it
         }
     }
 
-    const originPrivKeyWIF = 'cPT4Pgi9avWHt2ex4rmhxKzr9qPWYp8vsJiZfRFaG5vBDeHdufpq';
+    const originPrivKeyWIF = 'cPT4Pgi9avWHt2ex4rmhxKzr9qPWYp8vsJiZfRFaG5vBDeHdufpq'; // address with BTC in it
     // bitcore.PrivateKey(network).toWIF(); // TODO: receive from user input!
     const origin = new Origin(originPrivKeyWIF); // TODO: check!
 
@@ -122,16 +122,20 @@ module.exports = function MyService() {
 
     const fromAddress = origin.address;
     const amount = MIN_SATOSHIS;
-    const condition = 'true';
+    const condition = 'true'; // some boolean expression
     const contractPromise = origin.startContract({condition, fromAddress, amount, oracle, dest});
 
     const acceptedContractPromise = contractPromise.then((contract) =>
         dest.acceptContract(contract, amount, oracle)
     ).catch(console.log);
 
-    const completeTxPromise = acceptedContractPromise.then((contract) => oracle.measurement).catch(console.log);
+    const completeTxPromise = acceptedContractPromise.then((contract) =>
+        oracle.measurement(contract)
+    ).catch(console.log);
 
-    completeTxPromise.then((completeTx) => dest.collect(completeTx)).catch(console.log);
+    completeTxPromise.then((completeTx) =>
+        dest.collect(completeTx)
+    ).catch(console.log);
 };
 
 proto = module.exports.prototype;
