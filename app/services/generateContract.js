@@ -199,13 +199,13 @@ module.exports = function MyService() {
     const amountForMultisig = 600000;
 
 
-    //const link = sendMoneyToMultisig(amountForMultisig, originPrivK, destPrivK);
-    const contractIncomplete = startContract(originPrivK, destPrivK, condition, amountForDestination);
+    const link = sendMoneyToMultisig(amountForMultisig, originPrivK, destPrivK);
+    //const contractIncomplete = startContract(originPrivK, destPrivK, condition, amountForDestination);
 
-    contractIncomplete.then((transactionJson) =>
-        console.log(transactionJson)
+   // contractIncomplete.then((transactionJson) =>
+     //   console.log(transactionJson)
         //success, I have the incomplete transaction from the multisig address
-    ).catch(console.log);
+ //   ).catch(console.log);
 };
 
 proto = module.exports.prototype;

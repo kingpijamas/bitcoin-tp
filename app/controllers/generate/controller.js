@@ -11,9 +11,10 @@ module.exports = function generateControllerController(req, res) {
         if (req.body.bet) {
             //var link = sendMoneyToMultisig(600000, 'cSXBqf5rXKeJzZ8kvM7PbmZ5xgDRxeSxCJiJoqvqdYSVLpY6rDKj', 'cMbjKHpbGvU2BbhjTs1wcBmVs3ePyPR83L9r3vEV2y7yecTMXgiR');
             var link = myService();
-            res.render('generate', {link: link});
+            res.render('generate', {title:'data generated', link: link});
         } else if (req.body.contract) {
             myService();
+            //res.render('generate', {title:'data generated', link: link, json:'{lalal}'});
         }
     }
 };
