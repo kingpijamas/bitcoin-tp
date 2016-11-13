@@ -241,19 +241,21 @@ module.exports = function MyService() {
             console.log(expectedScript.toString() === scriptWithHashedExpression.toString());
 
             //Verify if the condition is true
-            let result = eval(contract.expression);
-            console.log(result.destAddress);
-            console.log("inspect");
-            console.log(contract.incompleteTx.inspect());
-            //if (result.destAddress != contract.incompleteTx.to()) { // TODO sacar de la tx
-             //   throw "Mismatching expression address!";
-            //}
+            if (!this.verifyCondition(contract)) {
+                console.log("condition is false");
+                return null;
+            }
 
             // If everything is fine, the oracle signs the transaction
             const signedByOracleTransaction = contract.incompleteTx.sign(this.privKey);
             console.log(signedByOracleTransaction);
             contract.incompleteTx = signedByOracleTransaction;
             return contract;
+        }
+
+        verifyCondition(contract) {
+            let result = eval(contract.expression);
+            return result != undefined;
         }
     }
 
@@ -283,6 +285,7 @@ module.exports = function MyService() {
     //success, money sent to this address
     // bitcore.Address('2NEYmpFiq3bh446jvmjXztEN3Xo5JYt2PQc')
     //we already have the money there
+    //TODO uncomment this line if you want money in the multisig address
     //origin.payToMultisig(dest, multisigAddress);
 
     //Now the grandparent creates the incomplete transaction and sends it to the grandson
@@ -302,6 +305,7 @@ module.exports = function MyService() {
 
     console.log(contractSignedBySon.incompleteTx);
 
+    //TODO uncomment broadcast to make it work
     const fullySignedContract = contractSignedBySon.then((contract) =>
         //success, I have a fully signed transaction
         console.log(contract.incompleteTx.isFullySigned())
