@@ -12,5 +12,7 @@ var controller = commons.controller, router = new express.Router();
 
 // generator - insert routes here
 router.get('/home/controller', controller('home/controller'));
+router.get('/generate/controller', controller('generate/controller'));
+router.get('/validate/controller', controller('validate/controller'));
 
 module.exports = router;

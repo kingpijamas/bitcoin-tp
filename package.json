@@ -28,5 +28,11 @@
     "request": "^2.60.0",
     "rx": "^3.0.1",
     "serve-favicon": "~2.3.0"
+  },
+  "devDependencies": {
+    "es6": "0.0.7",
+    "es6-shim": "^0.35.1",
+    "jade-bootstrap": "^1.0.9",
+    "node-es6": "^0.3.1"
   }
 }

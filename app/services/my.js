@@ -69,7 +69,7 @@ module.exports = function MyService() {
                 contract.incompleteTx = bitcore.Transaction()
                     .from(utxos, pubKeys, pubKeys.length)
                     .to(dest.address, amount)
-                    .change(fromAddress) // TODO: add me eventually
+                    .change(fromAddress)
                     .addData(safeHash(contract.expression))
                     // .fee(100000) // TODO: add me eventually
                     .sign(this.privkey);
@@ -176,7 +176,7 @@ module.exports = function MyService() {
     // bitcore.PrivateKey(network).toWIF(); // TODO: load from file in server!
     const oracle = new Oracle(oraclePrivKeyWIF); // TODO: check!
 
-    const fromAddress = origin.address;
+    const fromAddress = new Address([origin.pubKey, dest.pubKey, oracle.pubKey], 3);;
     const amount = MIN_SATOSHIS;
     const condition = 'true'; // some boolean expression
 
@@ -195,7 +195,6 @@ module.exports = function MyService() {
     ).catch(console.log);
 
     // origin.payTo(dest);
-}
-;
+};
 
 proto = module.exports.prototype;
