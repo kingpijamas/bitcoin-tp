@@ -47,7 +47,7 @@ module.exports = function MyService() {
 
     class Origin extends ContractSignatory { // 'grandparent'
 
-        startContract({condition, fromAddress, amount, oracle, dest}) {
+        startContract({condition, amount, oracle, dest, pubKeys}) {
             // FIXME: change this for custom JSON evaluation!
             var contract = {
                 condition: condition,
@@ -71,17 +71,32 @@ module.exports = function MyService() {
 
             // contract.outputScript = oracleScript;
 
-            return this.getUtxos(fromAddress).then((utxos) => {
-                const pubKeys = [this.pubKey, dest.pubKey, oracle.pubKey];
-                contract.incompleteTx = bitcore.Transaction()
-                    .from(utxos, pubKeys, pubKeys.length)
-                    .to(dest.address, amount)
-                    .change(fromAddress) // TODO: add me eventually
-                    .addData(safeHash(contract.expression))
+            //return this.getUtxos(fromAddress).then((utxos) => {
+              //  const pubKeys = [this.pubKey, dest.pubKey, oracle.pubKey];
+                //contract.incompleteTx = bitcore.Transaction()
+                  //  .from(utxos, pubKeys, pubKeys.length)
+                    //.to(dest.address, amount)
+                    //.change(fromAddress) // TODO: add me eventually
+                    //.addData(safeHash(contract.expression))
                     // .fee(100000) // TODO: add me eventually
-                    .sign(this.privkey);
+                    //.sign(this.privkey);
+
+//                return contract;
+  //          }).catch(console.log);
+            const multisigAddress = new bitcore.Address(pubKeys, 2);
+            console.log(multisigAddress);
+
+
+            return this.getUtxos(multisigAddress).then((utxos) => {
+                console.log(utxos);
+                contract.incompleteTx = bitcore.Transaction()
+                    .from(utxos[0], pubKeys, 2)
+                    .to(dest.address, 300000)
+                    .change(fromAddress)
+                    .fee(300000);
 
                 return contract;
+
             }).catch(console.log);
         }
 
@@ -145,6 +160,19 @@ module.exports = function MyService() {
             }).catch(console.log);
         }
 
+        payToMultisig(dest, multisigAddress) { // FIXME: kill eventually
+            return this.getUtxos(this.address).then((utxos) => {
+
+                const multisigTx = bitcore.Transaction()
+                    .from(utxos)
+                    .to(multisigAddress, amount)
+                    .change(this.address)
+                    .sign(this.privKey); // firmo para mandar mi plata
+
+                this.broadcast(multisigTx);
+            }).catch(console.log);
+        }
+
     }
 
     class Destination extends ContractSignatory { // destination: grandson
@@ -159,6 +187,14 @@ module.exports = function MyService() {
         collect(completeTx) {
             let insight = new Insight(network);
             insight.broadcast(completeTx.toString(), (err, res) => console.log(err, res))
+        }
+
+        signContract(contract, amount) {
+            const completeTransaction = contract.incompleteTx.sign(this.privKey);
+            console.log(completeTransaction);
+            console.log(completeTransaction.isFullySigned());
+            contract.incompleteTx = completeTransaction;
+            return contract;
         }
     }
 
@@ -184,7 +220,16 @@ module.exports = function MyService() {
                 throw "Mismatching expression address!";
             }
             console.log(`Contract: ${JSON.stringify(contract)} approved!`);
-            return contract.incompleteTx.sign(this.privKey);
+            const signedByOracleTransaction = contract.incompleteTx.sign(this.privKey);
+            console.log(signedByOracleTransaction);
+            return signedByOracleTransaction;
+        }
+
+        signContract(contract, amount, dest) {
+            const signedByOracleTransaction = contract.incompleteTx.sign(this.privKey);
+            console.log(signedByOracleTransaction);
+            contract.incompleteTx = signedByOracleTransaction;
+            return contract;
         }
     }
 
@@ -201,26 +246,44 @@ module.exports = function MyService() {
     const oracle = new Oracle(oraclePrivKeyWIF); // TODO: check!
 
     const fromAddress = origin.address;
-    const amount = MIN_SATOSHIS;
+    const amount = 600000;
     const condition = 'true'; // some boolean expression
 
-    // const contractPromise = origin.startContract({condition, fromAddress, amount, oracle, dest});
-    //
-    // const acceptedContractPromise = contractPromise.then((contract) =>
-    //     dest.acceptContract(contract, amount, oracle)
-    // ).catch(console.log);
-    //
-    // const completeTxPromise = acceptedContractPromise.then((contract) =>
-    //     oracle.measurement(contract)
-    // ).catch(console.log);
-    //
-    // completeTxPromise.then((completeTx) =>
-    //     dest.collect(completeTx)
-    // ).catch(console.log);
 
-    // origin.payTo(dest);
-    // origin.payMultisig(dest);
-    origin.payMultisigThenGetTheMoneyBack(dest);
+    //First, grandparent sends the money to a new multisig address
+    //The money will leave this address if two of them sign
+    const pubKeys = [origin.pubKey, dest.pubKey, oracle.pubKey];
+    const multisigAddress = new bitcore.Address(pubKeys, 2);
+    console.log(multisigAddress);
+
+    //success, money sent to this address
+    // bitcore.Address('2NEYmpFiq3bh446jvmjXztEN3Xo5JYt2PQc')
+    //we already have the money there
+    origin.payToMultisig(dest, multisigAddress);
+
+    //Now the grandparent creates the incomplete transaction and sends it to the grandson
+
+    const contractIncomplete = origin.startContract({condition, amount, oracle, dest, pubKeys});
+
+    const contractSignedByOracle = contractIncomplete.then((contract) =>
+         //console.log(contract.incompleteTx);
+        //success, I have the incomplete transaction from the multisig address
+        oracle.signContract(contract, amount, dest)
+    ).catch(console.log);
+
+    const contractSignedBySon = contractSignedByOracle.then((contract) =>
+        //success, I have the incomplete transaction signed only by oracle
+        dest.signContract(contract, amount)
+    ).catch(console.log);
+
+    console.log(contractSignedBySon.incompleteTx);
+
+    const fullySignedContract = contractSignedBySon.then((contract) =>
+        //success, I have a fully signed transaction
+        console.log(contract.incompleteTx.isFullySigned())
+        //dest.broadcast(contract.incompleteTx)
+    ).catch(console.log);
+
 }
 ;
 
