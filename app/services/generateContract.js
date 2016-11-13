@@ -3,6 +3,8 @@
 var commons = require('../commons.js');
 var proto, repo = commons.repository;
 
+const Origin = commons.model('origin');
+
 const bitcore = require('bitcore-lib');
 const Script = bitcore.Script;
 const MultiSigScriptHashInput = bitcore.Transaction.Input.MultiSigScriptHash;
@@ -23,7 +25,7 @@ module.exports = function MyService() {
 
 
     const startContract = (originPrivKey, destPrivKey, condition, amountDest) => {
-        //const origin = new Origin(originPrivKey);
+        const origin = new Origin(originPrivKey);
         //const dest = new Destination(destPrivKey);
         //const oracle = new Oracle(ORACLE_PRIV_KEY);
 
@@ -114,7 +116,7 @@ module.exports = function MyService() {
     const amountForMultisig = 600000;
 
 
-    const multisigAddress = sendMoneyToMultisig(amountForMultisig, originPrivK, destPrivK);
+    //const multisigAddress = sendMoneyToMultisig(amountForMultisig, originPrivK, destPrivK);
     const contractIncomplete = startContract(originPrivK, destPrivK, condition, amountForDestination);
 
     contractIncomplete.then((transactionJson) =>
