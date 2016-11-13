@@ -191,19 +191,29 @@ module.exports = function MyService() {
         oracle.signContract(contract)
     ).catch(console.log);
 
-    const contractSignedBySon = contractSignedByOracle.then((contract) =>
-        //success, I have the incomplete transaction signed only by oracle
-        dest.signContract(contract)
+
+    var contractSignedBySon = null;
+
+    contractSignedBySon = contractSignedByOracle.then(function(contract) {
+            if (contract != null) {
+                dest.signContract(contract)
+            }
+        }
     ).catch(console.log);
+
 
     console.log(contractSignedBySon.incompleteTx);
 
     //TODO uncomment broadcast to make it work
-    const fullySignedContract = contractSignedBySon.then((contract) =>
+
+
+    const fullySignedContract = contractSignedBySon.then(function(contract) {
+        if (contract != null ){
         //success, I have a fully signed transaction
-        console.log(contract.incompleteTx.isFullySigned())
-        //dest.broadcast(contract.incompleteTx)
-    ).catch(console.log);
+            console.log(contract.incompleteTx.isFullySigned())
+            //dest.broadcast(contract.incompleteTx)
+        }
+    }).catch(console.log);
 
 }
 ;
