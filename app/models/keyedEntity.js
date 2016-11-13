@@ -1,9 +1,6 @@
 'use strict';
 
-const commons = require('../commons.js');
-
 const bitcore = require('bitcore-lib');
-
 
 class KeyedEntity {
     constructor(privKeyWIF) {
@@ -18,3 +15,5 @@ class KeyedEntity {
         return this.pubKey.toAddress();
     }
 }
+
+module.exports = KeyedEntity;
