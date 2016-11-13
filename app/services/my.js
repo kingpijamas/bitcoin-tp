@@ -5,6 +5,7 @@ var proto, repo = commons.repository;
 
 const bitcore = require('bitcore-lib');
 const Script = bitcore.Script;
+const MultiSigScriptHashInput = bitcore.Transaction.Input.MultiSigScriptHash;
 const Output = bitcore.Transaction.Output;
 
 const bitcoreExplorers = require('bitcore-explorers');
@@ -41,33 +42,35 @@ module.exports = function MyService() {
 
         startContract({condition, fromAddress, amount, oracle, dest}) {
             // FIXME: change this for custom JSON evaluation!
-            const contract = {
+            var contract = {
                 condition: condition,
                 expression: this.generateContractExpression(condition, dest, amount),
                 destAddress: dest.address
             };
 
-            var hash = new Buffer(safeHash(contract.expression));
+            // var hash = new Buffer(safeHash(contract.expression));
 
-            const oracleScript = Script()
-                .add(hash)
-                .add('OP_DROP')
-                .add('OP_2')
-                .add(dest.pubKey.toBuffer())
-                .add(oracle.pubKey.toBuffer())
-                .add('OP_2')
-                .add('OP_CHECKMULTISIG');
+            // const oracleScript = Script()
+            //     .add(hash)
+            //     .add('OP_DROP')
+            //     .add('OP_3')
+            //     .add(this.pubKey.toBuffer())
+            //     .add(dest.pubKey.toBuffer())
+            //     .add(oracle.pubKey.toBuffer())
+            //     .add('OP_3')
+            //     .add('OP_CHECKMULTISIG');
 
-            console.log(oracleScript);
+            // console.log(oracleScript);
 
-            contract.outputScript = oracleScript;
+            // contract.outputScript = oracleScript;
 
             return this.getUtxos(fromAddress).then((utxos) => {
+                const pubKeys = [this.pubKey, dest.pubKey, oracle.pubKey];
                 contract.incompleteTx = bitcore.Transaction()
-                    .from(utxos)
-                    .addOutput(new Output({satoshis: 0, script: oracleScript}))
-                    .to(contract.destAddress, amount) // TODO: check!
-                    // .change(address) // TODO: add me eventually
+                    .from(utxos, pubKeys, pubKeys.length)
+                    .to(dest.address, amount)
+                    .change(fromAddress) // TODO: add me eventually
+                    .addData(safeHash(contract.expression))
                     // .fee(100000) // TODO: add me eventually
                     .sign(this.privkey);
 
@@ -86,16 +89,47 @@ module.exports = function MyService() {
                 }
             );
         }
+
+        payTo(dest) { // FIXME: kill eventually
+            return this.getUtxos(this.address).then((utxos) => {
+                const completeTx = bitcore.Transaction()
+                    .from(utxos)
+                    .to(dest.address, amount)
+                    .change(this.address)
+                    .sign(this.privKey);
+
+                const insight = new Insight(network);
+                insight.broadcast(completeTx.toString(), (err, res) => console.log(err, res));
+            }).catch(console.log);
+        }
+
+        payMultisig(dest, other) { // FIXME: kill eventually
+            return this.getUtxos(this.address).then((utxos) => {
+                const pubKeys = [this.pubKey, dest.pubKey, other.pubKey];
+                const input = new MultiSigScriptHashInput({pubKeys: pubKeys, threshold: 3});
+
+                const completeTx = bitcore.Transaction()
+                    .addInput(input)
+                    .to(dest.address, amount)
+                    .change(this.address)
+                    .sign(this.privKey);
+
+                var serialized = multiSigTx.toObject();
+
+                const insight = new Insight(network);
+                insight.broadcast(completeTx.toString(), (err, res) => console.log(err, res));
+            }).catch(console.log);
+        }
+
     }
 
     class Destination extends ContractSignatory { // destination: grandson
         acceptContract(contract, amount, oracle) {
-            const contractExpression = this.generateContractExpression(contract.condition, dest, amount);
-            if (safeHash(contract.expression) != safeHash(contractExpression)) {
-                throw "Contract mismatch!";
-            }
-            contract.incompleteTx = contract.incompleteTx.sign(this.privKey);
-            return contract;
+            // const contractExpression = this.generateContractExpression(contract.condition, dest, amount);
+            // if (safeHash(contract.incompleteTx.data) != safeHash(contractExpression)) { // TODO sacar de la tx
+            //     throw "Contract mismatch!";
+            // }
+            return contract.incompleteTx.sign(this.privKey);
         }
 
         collect(completeTx) {
@@ -106,23 +140,23 @@ module.exports = function MyService() {
 
     class Oracle extends KeyedEntity {
         measurement(contract) {
-
             //TODO ver si podemos comparar hasheando en vez de la comparacion de abajo
-           // console.log(new Buffer(safeHash(contract.expression)).toString());
+            // console.log(new Buffer(safeHash(contract.expression)).toString());
 
             //var hash = new Buffer(safeHash(contract.expression)).toString();
             //if(contract.incompleteTx.outputs[0].script.toString().includes(hash)) {
-             //   console.log("si");
+            //   console.log("si");
             //}
 
             // comparación del outputScript que mandó el nieto (y creó el abuelo)
             // con el outputScript de la transacción incompleta que mandó el nieto
             //el outputScript contiene el hash de la expresión
-            if (contract.incompleteTx.outputs[0].script.toString() !== contract.outputScript.toString()) {
-                throw "Contract mismatch!";
-            }
+
+            // if (contract.incompleteTx.outputs[0].script.toString() !== contract.outputScript.toString()) {
+            //   throw "Contract mismatch!";
+            // }
             let result = eval(contract.expression);
-            if (result.destAddress != contract.destAddress) {
+            if (result.destAddress != contract.destAddress) { // TODO sacar de la tx
                 throw "Mismatching expression address!";
             }
             console.log(`Contract: ${JSON.stringify(contract)} approved!`);
@@ -130,7 +164,7 @@ module.exports = function MyService() {
         }
     }
 
-    const originPrivKeyWIF = 'cPT4Pgi9avWHt2ex4rmhxKzr9qPWYp8vsJiZfRFaG5vBDeHdufpq'; // address with BTC in it
+    const originPrivKeyWIF = 'cSXBqf5rXKeJzZ8kvM7PbmZ5xgDRxeSxCJiJoqvqdYSVLpY6rDKj'; // address with BTC in it
     // bitcore.PrivateKey(network).toWIF(); // TODO: receive from user input!
     const origin = new Origin(originPrivKeyWIF); // TODO: check!
 
@@ -145,8 +179,8 @@ module.exports = function MyService() {
     const fromAddress = origin.address;
     const amount = MIN_SATOSHIS;
     const condition = 'true'; // some boolean expression
-    const contractPromise = origin.startContract({condition, fromAddress, amount, oracle, dest});
 
+    const contractPromise = origin.startContract({condition, fromAddress, amount, oracle, dest});
 
     const acceptedContractPromise = contractPromise.then((contract) =>
         dest.acceptContract(contract, amount, oracle)
@@ -159,6 +193,9 @@ module.exports = function MyService() {
     completeTxPromise.then((completeTx) =>
         dest.collect(completeTx)
     ).catch(console.log);
-};
+
+    // origin.payTo(dest);
+}
+;
 
 proto = module.exports.prototype;
