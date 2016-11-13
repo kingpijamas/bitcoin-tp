@@ -36,6 +36,13 @@ module.exports = function MyService() {
         generateContractExpression(contractCondition, dest, amount) {
             return `if (${contractCondition}) { ({ destAddress: '${dest.address}', amount: ${amount} }) }`;
         }
+
+        broadcast(tx) {
+            const insight = new Insight(network);
+            insight.broadcast(tx.toString(), (err, res) =>
+                console.log({err: err, res: res})
+            );
+        }
     }
 
     class Origin extends ContractSignatory { // 'grandparent'
@@ -98,26 +105,43 @@ module.exports = function MyService() {
                     .change(this.address)
                     .sign(this.privKey);
 
-                const insight = new Insight(network);
-                insight.broadcast(completeTx.toString(), (err, res) => console.log(err, res));
+                this.broadcast(completeTx);
             }).catch(console.log);
         }
 
-        payMultisig(dest, other) { // FIXME: kill eventually
+        payMultisig(dest) { // FIXME: kill eventually
             return this.getUtxos(this.address).then((utxos) => {
-                const pubKeys = [this.pubKey, dest.pubKey, other.pubKey];
-                const input = new MultiSigScriptHashInput({pubKeys: pubKeys, threshold: 3});
+                const pubKeys = [this.pubKey, dest.pubKey];
+                const multisigAddress = new bitcore.Address(pubKeys, 1);
 
-                const completeTx = bitcore.Transaction()
-                    .addInput(input)
-                    .to(dest.address, amount)
+                const multisigTx = bitcore.Transaction()
+                    .from(utxos)
+                    .to(multisigAddress, amount)
                     .change(this.address)
-                    .sign(this.privKey);
+                    .sign(this.privKey); // firmo para mandar mi plata
 
-                var serialized = multiSigTx.toObject();
+                this.broadcast(multisigTx);
+            }).catch(console.log);
+        }
 
-                const insight = new Insight(network);
-                insight.broadcast(completeTx.toString(), (err, res) => console.log(err, res));
+
+        payMultisigThenPayGetTheMoneyBack(dest) { // FIXME: kill eventually
+            const pubKeys = [this.pubKey, dest.pubKey];
+            const multisigAddress = new bitcore.Address(pubKeys, 1);
+
+            const firstTransactionDonePromise = this.payMultisig(dest);
+            const multisigUtxosPromise = firstTransactionDonePromise
+                .then(() => this.getUtxos(multisigAddress))
+                .catch(console.log);
+
+            return multisigUtxosPromise.then((multisigUtxos) => {
+                // ahora quiero sacar la plata de la multisig que tengo con dest
+                const multisigTx = bitcore.Transaction()
+                    .from(multisigUtxos, pubKeys, 1)
+                    .to(this.address, amount)
+                    .sign(this.privKey); // con solo mi firma deberia bastar
+
+                this.broadcast(multisigTx);
             }).catch(console.log);
         }
 
@@ -180,21 +204,23 @@ module.exports = function MyService() {
     const amount = MIN_SATOSHIS;
     const condition = 'true'; // some boolean expression
 
-    const contractPromise = origin.startContract({condition, fromAddress, amount, oracle, dest});
-
-    const acceptedContractPromise = contractPromise.then((contract) =>
-        dest.acceptContract(contract, amount, oracle)
-    ).catch(console.log);
-
-    const completeTxPromise = acceptedContractPromise.then((contract) =>
-        oracle.measurement(contract)
-    ).catch(console.log);
-
-    completeTxPromise.then((completeTx) =>
-        dest.collect(completeTx)
-    ).catch(console.log);
+    // const contractPromise = origin.startContract({condition, fromAddress, amount, oracle, dest});
+    //
+    // const acceptedContractPromise = contractPromise.then((contract) =>
+    //     dest.acceptContract(contract, amount, oracle)
+    // ).catch(console.log);
+    //
+    // const completeTxPromise = acceptedContractPromise.then((contract) =>
+    //     oracle.measurement(contract)
+    // ).catch(console.log);
+    //
+    // completeTxPromise.then((completeTx) =>
+    //     dest.collect(completeTx)
+    // ).catch(console.log);
 
     // origin.payTo(dest);
+    // origin.payMultisig(dest);
+    origin.payMultisigThenPayGetTheMoneyBack(dest);
 }
 ;
 
