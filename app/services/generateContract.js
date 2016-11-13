@@ -3,13 +3,6 @@
 var commons = require('../commons.js');
 var proto, repo = commons.repository;
 
-//var model = require('./model.js');
-//import Destination from './model.js';
-//import Oracle from './model.js';
-//import ContractSignatory from './model.js';
-//import KeyedEntity from './model.js';
-
-
 const bitcore = require('bitcore-lib');
 const Script = bitcore.Script;
 const MultiSigScriptHashInput = bitcore.Transaction.Input.MultiSigScriptHash;
@@ -64,23 +57,21 @@ module.exports = function MyService() {
     }
 
     const sendMoneyToMultisig = (amountMultisig, originPrivKey, destPrivKey) => {
-        //const origin = new Origin(originPrivKey);
-        //const dest = new Destination(destPrivKey);
-        //const oracle = new Oracle(ORACLE_PRIV_KEY);
+        const pubKeys = [getPublicKey(originPrivKey), getPublicKey(destPrivKey), getPublicKey(ORACLE_PRIV_KEY)];
+        const multisigAddress = new bitcore.Address(pubKeys, 2);
 
-        //const pubKeys = [origin.pubKey, dest.pubKey, oracle.pubKey];
-        //const multisigAddress = new bitcore.Address(pubKeys, 2);
+        const originAddress = getAddress(originPrivKey);
+        return getUtxos(originAddress).then((utxos) => {
 
-        //return getUtxos(origin.address).then((utxos) => {
+          const multisigTx = bitcore.Transaction()
+                .from(utxos)
+                .to(multisigAddress, amountMultisig)
+                .change(originAddress)
+                .sign(originPrivKey); // firmo para mandar mi plata
 
-          //  const multisigTx = bitcore.Transaction()
-            //    .from(utxos)
-              //  .to(multisigAddress, amountMultisig)
-               // .change(origin.address)
-                //.sign(origin.privKey); // firmo para mandar mi plata
-
-           // broadcast(multisigTx);
-        //}).catch(console.log);
+            broadcast(multisigTx);
+            return multisigAddress;
+        }).catch(console.log);
     }
 
     const getPublicKey = (privKey) => {
@@ -123,7 +114,7 @@ module.exports = function MyService() {
     const amountForMultisig = 600000;
 
 
-    //sendMoneyToMultisig(amountForMultisig, originPrivK, destPrivK);
+    const multisigAddress = sendMoneyToMultisig(amountForMultisig, originPrivK, destPrivK);
     const contractIncomplete = startContract(originPrivK, destPrivK, condition, amountForDestination);
 
     contractIncomplete.then((transactionJson) =>
