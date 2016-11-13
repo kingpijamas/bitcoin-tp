@@ -40,6 +40,7 @@ app.use(messageHandler(config.logging));
 app.use(loggerBunyan.errorLogger(accessLoggerConfig));
 
 app.use('/', routes);
+app.use(express.static('./app/public'));
 
 app.set('views', './app/views');
 app.set('view engine', 'jade');
