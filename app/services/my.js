@@ -38,6 +38,7 @@ module.exports = function MyService() {
     }
 
     class Origin extends ContractSignatory { // 'grandparent'
+
         startContract({condition, fromAddress, amount, oracle, dest}) {
             // FIXME: change this for custom JSON evaluation!
             const contract = {
@@ -46,12 +47,20 @@ module.exports = function MyService() {
                 destAddress: dest.address
             };
 
+            var hash = new Buffer(safeHash(contract.expression));
+
             const oracleScript = Script()
-                .add(safeHash(contract.expression)) // TODO: check !
-                .add('OP_DROP 2') // TODO: check!
-                .add(dest.pubKey) // TODO: check!
-                .add(oracle.pubKey) // TODO: check!
-                .add('CHECKMULTISIG');
+                .add(hash)
+                .add('OP_DROP')
+                .add('OP_2')
+                .add(dest.pubKey.toBuffer())
+                .add(oracle.pubKey.toBuffer())
+                .add('OP_2')
+                .add('OP_CHECKMULTISIG');
+
+            console.log(oracleScript);
+
+            contract.outputScript = oracleScript;
 
             return this.getUtxos(fromAddress).then((utxos) => {
                 contract.incompleteTx = bitcore.Transaction()
@@ -90,21 +99,34 @@ module.exports = function MyService() {
         }
 
         collect(completeTx) {
-            // TODO: broadcast this!
+            let insight = new Insight(network);
+            insight.broadcast(completeTx.toString(), (err, res) => console.log(err, res))
         }
     }
 
     class Oracle extends KeyedEntity {
         measurement(contract) {
-            if (safeHash(contract.expression) != safeHash(contract.expression)) { // FIXME: duh! fetch it from the tx itself I suppose :P
+
+            //TODO ver si podemos comparar hasheando en vez de la comparacion de abajo
+           // console.log(new Buffer(safeHash(contract.expression)).toString());
+
+            //var hash = new Buffer(safeHash(contract.expression)).toString();
+            //if(contract.incompleteTx.outputs[0].script.toString().includes(hash)) {
+             //   console.log("si");
+            //}
+
+            // comparación del outputScript que mandó el nieto (y creó el abuelo)
+            // con el outputScript de la transacción incompleta que mandó el nieto
+            //el outputScript contiene el hash de la expresión
+            if (contract.incompleteTx.outputs[0].script.toString() !== contract.outputScript.toString()) {
                 throw "Contract mismatch!";
             }
             let result = eval(contract.expression);
-            if (result.destAddress != contract.destAddress) { // TODO: check! maybe the amount should match contract.amount as well
+            if (result.destAddress != contract.destAddress) {
                 throw "Mismatching expression address!";
             }
             console.log(`Contract: ${JSON.stringify(contract)} approved!`);
-            return contract.incompleteTx.sign(this.privKey); // TODO: send to dest... or just broadcast it
+            return contract.incompleteTx.sign(this.privKey);
         }
     }
 
@@ -124,6 +146,7 @@ module.exports = function MyService() {
     const amount = MIN_SATOSHIS;
     const condition = 'true'; // some boolean expression
     const contractPromise = origin.startContract({condition, fromAddress, amount, oracle, dest});
+
 
     const acceptedContractPromise = contractPromise.then((contract) =>
         dest.acceptContract(contract, amount, oracle)
