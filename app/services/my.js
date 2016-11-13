@@ -125,7 +125,7 @@ module.exports = function MyService() {
         }
 
 
-        payMultisigThenPayGetTheMoneyBack(dest) { // FIXME: kill eventually
+        payMultisigThenGetTheMoneyBack(dest) { // FIXME: kill eventually
             const pubKeys = [this.pubKey, dest.pubKey];
             const multisigAddress = new bitcore.Address(pubKeys, 1);
 
@@ -220,7 +220,7 @@ module.exports = function MyService() {
 
     // origin.payTo(dest);
     // origin.payMultisig(dest);
-    origin.payMultisigThenPayGetTheMoneyBack(dest);
+    origin.payMultisigThenGetTheMoneyBack(dest);
 }
 ;
 
