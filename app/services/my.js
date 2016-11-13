@@ -92,6 +92,7 @@ module.exports = function MyService() {
                 contract.incompleteTx = bitcore.Transaction()
                     .from(utxos[0], pubKeys, 2)
                     .to(dest.address, 300000)
+                    .addData(safeHash(contract.expression))
                     .change(fromAddress)
                     .fee(300000);
 
@@ -226,6 +227,29 @@ module.exports = function MyService() {
         }
 
         signContract(contract, amount, dest) {
+
+            //Verify that the hash of the plane expression is the same as the one in the transaction
+            const planeExpression = contract.expression;
+            const scriptWithHashedExpression = contract.incompleteTx.outputs[1].script;
+
+            const expectedScript = new Script()
+                .add('OP_RETURN')
+                .add(new Buffer(safeHash(planeExpression)));
+            if (expectedScript.toString() !== scriptWithHashedExpression.toString()) {
+                throw "Contract mismatch!";
+            }
+            console.log(expectedScript.toString() === scriptWithHashedExpression.toString());
+
+            //Verify if the condition is true
+            let result = eval(contract.expression);
+            console.log(result.destAddress);
+            console.log("inspect");
+            console.log(contract.incompleteTx.inspect());
+            //if (result.destAddress != contract.incompleteTx.to()) { // TODO sacar de la tx
+             //   throw "Mismatching expression address!";
+            //}
+
+            // If everything is fine, the oracle signs the transaction
             const signedByOracleTransaction = contract.incompleteTx.sign(this.privKey);
             console.log(signedByOracleTransaction);
             contract.incompleteTx = signedByOracleTransaction;
@@ -259,7 +283,7 @@ module.exports = function MyService() {
     //success, money sent to this address
     // bitcore.Address('2NEYmpFiq3bh446jvmjXztEN3Xo5JYt2PQc')
     //we already have the money there
-    origin.payToMultisig(dest, multisigAddress);
+    //origin.payToMultisig(dest, multisigAddress);
 
     //Now the grandparent creates the incomplete transaction and sends it to the grandson
 
