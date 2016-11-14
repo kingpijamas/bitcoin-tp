@@ -13,7 +13,7 @@ class KeyedEntity {
     }
 
     get address() {
-        return this.pubKey.toAddress();
+        return this.pubKey.toAddress('testnet');
     }
 }
 

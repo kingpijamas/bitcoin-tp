@@ -37,27 +37,28 @@ html(lang='en')
             form.form-signin(role = 'form', name = 'validateForm', method = 'POST', action = "/validate/controller")
                 h2.form-signin-heading Please fill the info
                 input.form-control(type = 'text', name = 'privkeyWIF', placeholder = 'PrivKey WIF', required = 'true')
-                input.form-control(type = 'textarea', name = 'incompleteTx', placeholder = 'Incomplete Transaction', required = 'true', autofocus = '')
+                input.form-control(type = 'textarea', name = 'incompleteTr', placeholder = 'Incomplete Transaction', required = 'true', autofocus = '')
                 input.form-control(type = 'text', name = 'condition', placeholder = 'Condition', required='true')
+                input.form-control(type = 'text', name = 'amountForDest', placeholder = 'Amount', required= 'true')
                 .checkbox
                     label
                         input(type='checkbox', value='accept')
                         |  I accept the terms and conditions
-                button.btn.btn-lg.btn-primary.btn-block(type='submit', name="sign", value="sign") Sign
                 button.btn.btn-lg.btn-primary.btn-block(type='submit', name="validate", value="validate") Validate contract
+                button.btn.btn-lg.btn-primary.btn-block(type='submit', name="sign", value="sign") Sign
         .container
             .content
                 .withMargin
                     table.table.table-striped
                         tbody
                             tr
-                                td ¿Signed by destination?
-                                td
-                                    p= isSigned
-                            tr
                                 td ¿Valid?
                                 td
                                     p= isValid
+                            tr
+                                td ¿Signed?
+                                td
+                                    p= isSigned
         // Bootstrap core JavaScript
         // ==================================================
         // Placed at the end of the document so the pages load faster
