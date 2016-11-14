@@ -11,7 +11,7 @@ module.exports = function generateControllerController(req, res) {
         var originPrivKey = req.body.privkeyWIF;
         var destPubKey = req.body.destPubKey;
         var amountToMultisig = parseInt(req.body.amountMulti);
-        var condition = (req.body.condition === 'true');
+        var condition = req.body.condition;
 
         if (req.body.bet) {
             //adding money for fee

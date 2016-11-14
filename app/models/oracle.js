@@ -16,21 +16,15 @@ class Oracle extends KeyedEntity {
     signContract(contract) {
         const safeHash = (value) => { return bitcore.crypto.Hash.sha256(new Buffer(value)).toString() };
 
-        //Verify that the hash of the plane expression is the same as the one in the transaction
-        const planeExpression = contract.expression;
+        //Verify that the hash of the plain expression is the same as the one in the transaction
+        const plainExpression = contract.expression;
         const scriptWithHashedExpression = contract.incompleteTx.outputs[1].script;
 
         const expectedScript = new Script()
             .add('OP_RETURN')
-            .add(new Buffer(safeHash(planeExpression)));
+            .add(new Buffer(safeHash(plainExpression)));
         if (expectedScript.toString() !== scriptWithHashedExpression.toString()) {
             throw "Contract mismatch!";
-        }
-
-        //Verify if the condition is true
-        if (!this.verifyCondition(contract)) {
-            console.log("condition is false");
-            return null;
         }
 
         // If everything is fine, the oracle signs the transaction
@@ -40,10 +34,7 @@ class Oracle extends KeyedEntity {
         return contract;
     }
 
-    verifyCondition(contract) {
-        let result = eval(contract.expression);
-        return result != undefined;
-    }
+
 }
 
 module.exports = Oracle;

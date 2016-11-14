@@ -34,30 +34,32 @@ module.exports = function homeControllerController(req, res) {
         res.render('validate');
     } else if (req.method === "POST") {
         var destPrivKey = req.body.privkeyWIF;
-        var condition = (req.body.condition === 'true');
+        var condition = req.body.condition;
         var transaction = JSON.parse(req.body.incompleteTr);
         var amountForDest = parseInt(req.body.amountForDest);
 
         if (req.body.validate) {
 
-            var contractSignedByOracle = validateAndSignByOracle(destPrivKey, condition, amountForDest, transaction);
-
-            if (contractSignedByOracle == null) {
-                validCondition = false;
-                showError(contractSignedByOracle)
-            } else {
-                validCondition = true;
-            }
-
-            var contractSignedByDestination = null;
-            if (validCondition) {
-                var contractSignedByDestination = signByDestination(destPrivKey, contractSignedByOracle);
-                var fullySigned = contractSignedByDestination.incompleteTx.isFullySigned();
-                if (fullySigned) {
-                    broadcastTransaction(destPrivKey, contractSignedByDestination);
+            validateAndSignByOracle(destPrivKey, condition, amountForDest, transaction).then(contractSignedByOracle => {
+                if (contractSignedByOracle == null) {
+                    validCondition = false;
+                    showError(contractSignedByOracle)
+                } else {
+                    validCondition = true;
                 }
-            }
-            showSignatureResult(fullySigned, validCondition);
+
+                var contractSignedByDestination = null;
+                if (validCondition) {
+                    var contractSignedByDestination = signByDestination(destPrivKey, contractSignedByOracle);
+                    var fullySigned = contractSignedByDestination.incompleteTx.isFullySigned();
+                    if (fullySigned) {
+                        broadcastTransaction(destPrivKey, contractSignedByDestination);
+                    }
+                }
+                showSignatureResult(fullySigned, validCondition);
+            }).catch(error => {
+                showSignatureResult(false, false);
+            });
 
         }
     }
