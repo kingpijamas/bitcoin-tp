@@ -9,8 +9,13 @@ module.exports = function generateControllerController(req, res) {
     } else if (req.method === "POST") {
         if (req.body.bet) {
             var link = sendMoneyToMultisig(600000, 'cSXBqf5rXKeJzZ8kvM7PbmZ5xgDRxeSxCJiJoqvqdYSVLpY6rDKj', 'cMbjKHpbGvU2BbhjTs1wcBmVs3ePyPR83L9r3vEV2y7yecTMXgiR');
+            link.then((linkString) => 
+                res.render('generate', {title:'data generated', link: linkString})
+            ).catch(console.log);
+
+
             //var link = myService();
-            res.render('generate', {title:'data generated', link: link.toString()});
+            //res.render('generate', {title:'data generated', link: link.toString()});
         } else if (req.body.contract) {
             //myService();
             //res.render('generate', {title:'data generated', link: link, json:'{lalal}'});
