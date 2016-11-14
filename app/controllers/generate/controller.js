@@ -3,20 +3,33 @@ var commons = require('../../commons.js');
 
 module.exports = function generateControllerController(req, res) {
     var sendMoneyToMultisig = commons.service("generateContract");
+    var startContract = commons.service("makeContract");
 
     if (req.method === "GET") {
         res.render('generate');
     } else if (req.method === "POST") {
+        var originPrivKey = req.body.privkeyWIF;
+        var destPubKey = req.body.destPubKey;
+        var amountToMultisig = parseInt(req.body.amountMulti);
+        var condition = (req.body.condition === 'true');
+
         if (req.body.bet) {
-            //TODO: tomar los parámetros: @req.body.privkeyWIF, @req.body.condition, @req.body.dest y @req.body.amount
-            var link = sendMoneyToMultisig(600000, 'cSXBqf5rXKeJzZ8kvM7PbmZ5xgDRxeSxCJiJoqvqdYSVLpY6rDKj', 'cMbjKHpbGvU2BbhjTs1wcBmVs3ePyPR83L9r3vEV2y7yecTMXgiR');
+            //adding money for fee
+            var link = sendMoneyToMultisig(amountToMultisig * 2, originPrivKey, destPubKey);
+
             link.then((linkString) =>
-                res.render('generate', {link: linkString}) //podés pasar json: ''
+                res.render('generate', {link: linkString})
             ).catch(console.log);
-            //var link = myService();
-            //res.render('generate', {title:'data generated', link: link.toString()});
         } else if (req.body.contract) {
-            //myService();
+
+            var contractIncomplete = startContract(originPrivKey, destPubKey, condition, amountToMultisig);
+
+            contractIncomplete.then((contract) =>
+                //console.log(contract.incompleteTx.toJSON().toString())
+                res.render('generate', {json: JSON.stringify(contract.incompleteTx.toJSON())})
+            ).catch(console.log);
+
+
             //res.render('generate', {title:'data generated', link: link, json:'{lalal}'});
         }
     }

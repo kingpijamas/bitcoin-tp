@@ -37,9 +37,9 @@ html(lang='en')
             form.form-signin(role='form', name='generateForm', method='POST', action="/generate/controller")
                 h2.form-signin-heading Please fill the info
                 input.form-control(type='text', name='privkeyWIF', placeholder='PrivKey WIF', required='true', autofocus='')
-                input.form-control(type='text', name='dest', placeholder='Destination Address', required='true')
+                input.form-control(type='text', name='destPubKey', placeholder='Destination Public Key', required='true')
                 input.form-control(type='text', name='condition', placeholder='Condition', required='true')
-                input.form-control(type='number', name='amount', placeholder='Amount', required='true')
+                input.form-control(type='number', name='amountMulti', placeholder='Amount', required='true')
                 .checkbox
                     label
                         input(type='checkbox', value='accept')

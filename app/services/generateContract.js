@@ -24,12 +24,11 @@ const MIN_SATOSHIS = 100000;
 const ORACLE_PRIV_KEY = 'cSXfd8DuArnMr3HhRzZh1yXd7QKNv3ChEuvS6WV4Df8NTv7nZjAW';
 
 
-module.exports = function sendMoneyToMultisig(amountMultisig, originPrivKey, destPrivKey) {
+module.exports = function sendMoneyToMultisig(amountMultisig, originPrivKey, destPubKey) {
     const origin = new Origin(originPrivKey);
-    const destination = new Destination(destPrivKey);
     const oracle = new Oracle(ORACLE_PRIV_KEY);
 
-    const pubKeys = [origin.pubKey, destination.pubKey, oracle.pubKey];
+    const pubKeys = [origin.pubKey, destPubKey, oracle.pubKey];
     const multisigAddress = new bitcore.Address(pubKeys, 2);
 
     const originAddress = origin.address;
