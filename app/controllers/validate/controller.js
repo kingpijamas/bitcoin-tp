@@ -4,14 +4,31 @@ var commons = require('../../commons.js');
 
 module.exports = function homeControllerController(req, res) {
     var validateAndSignByOracle = commons.service("oracleValidation");
+    var signByDestination = commons.service("destinationSignature");
+    var broadcastTransaction = commons.service("destinationBroadcast");
 
-    const showValidation = (contract) => {
+    var validCondition = false;
+
+    const showError = (contract) => {
         if (contract == null) {
             res.render('validate', {isSigned: 'No', isValid: 'The condition is not valid'})
-        } else {
-            res.render('validate', {isSigned: 'Signed by oracle', isValid: 'The condition is valid'})
         }
     };
+
+    const showSignatureResult = (fullySigned, valid) => {
+        var validation = null;
+        if (valid) {
+            validation = 'The condition is valid';
+        } else {
+            validation = 'The condition is not valid';
+        }
+
+        if (fullySigned) {
+            res.render('validate', {isSigned: 'Signed by oracle and destination', isValid: validation})
+        } else {
+            res.render('validate', {isSigned: 'Not fully signed', isValid: validation})
+        }
+    }
 
     if (req.method === "GET") {
         res.render('validate');
@@ -21,18 +38,27 @@ module.exports = function homeControllerController(req, res) {
         var transaction = JSON.parse(req.body.incompleteTr);
         var amountForDest = parseInt(req.body.amountForDest);
 
-        if (req.body.sign) {
-            //TODO: la idea es que después de firmar ponga "isSigned: 'true'"
-            //TODO: llamar al servicio con los parámetros: @req.body.condition, @req.body.privkeyWIF y @req.body.incompleteTx
-                res.render('validate', {isSigned: 'isSigned', isValid: 'isValid'})
-        } else if (req.body.validate) {
+        if (req.body.validate) {
 
             var contractSignedByOracle = validateAndSignByOracle(destPrivKey, condition, amountForDest, transaction);
 
+            if (contractSignedByOracle == null) {
+                validCondition = false;
+                showError(contractSignedByOracle)
+            } else {
+                validCondition = true;
+            }
 
-            //contractSignedByOracle.then((contract) => 
-            showValidation(contractSignedByOracle);
-            //).catch(console.log);
+            var contractSignedByDestination = null;
+            if (validCondition) {
+                var contractSignedByDestination = signByDestination(destPrivKey, contractSignedByOracle);
+                var fullySigned = contractSignedByDestination.incompleteTx.isFullySigned();
+                if (fullySigned) {
+                    broadcastTransaction(destPrivKey, contractSignedByDestination);
+                }
+            }
+            showSignatureResult(fullySigned, validCondition);
+
         }
     }
 
