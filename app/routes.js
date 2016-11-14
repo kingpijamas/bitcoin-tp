@@ -11,6 +11,7 @@ var commons = require('./commons.js'), express = require('express');
 var controller = commons.controller, router = new express.Router();
 
 // generator - insert routes here
+router.get('/', controller('home/controller'));
 router.get('/home', controller('home/controller'));
 router.get('/generate', controller('generate/controller'));
 router.post('/generate',controller('generate/controller'));
