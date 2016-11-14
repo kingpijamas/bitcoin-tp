@@ -1,7 +1,6 @@
 'use strict';
 
-var commons = require('../commons.js');
-const ContractSignatory = commons.model('contractSignatory');
+const ContractSignatory = require('./contractSignatory');
 
 const bitcore = require('bitcore-lib');
 
@@ -38,17 +37,6 @@ class Origin extends ContractSignatory { // 'grandparent'
         }).catch(console.log);
     }
 
-    getUtxos(fromAddress) {
-        return new Promise(
-            (resolve, reject) => {
-                let insight = new Insight(network);
-                insight.getUnspentUtxos(fromAddress, (error, utxos) => {
-                    if (error) { reject(error) }
-                    resolve(utxos);
-                });
-            }
-        );
-    }
 
     //Used to send the grandparent´s money to the multisig address
     payToMultisig(multisigAddress) {
@@ -65,3 +53,5 @@ class Origin extends ContractSignatory { // 'grandparent'
     }
 
 }
+
+module.exports = Origin;

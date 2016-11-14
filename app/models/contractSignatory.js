@@ -1,7 +1,6 @@
 'use strict';
 
-const commons = require('../commons.js');
-const keyedEntity = require('./keyedEntity.js');
+const KeyedEntity = require('./keyedEntity');
 const bitcore = require('bitcore-lib');
 
 const bitcoreExplorers = require('bitcore-explorers');
@@ -9,7 +8,7 @@ const Insight = bitcoreExplorers.Insight;
 
 const network = 'testnet';
 
-/*class ContractSignatory extends keyedEntity.KeyedEntity {
+class ContractSignatory extends KeyedEntity {
     generateContractExpression(contractCondition, dest, amountDest) {
         return `if (${contractCondition}) { ({ destAddress: '${dest.address}', amount: ${amountDest} }) }`;
     }
@@ -32,4 +31,6 @@ const network = 'testnet';
             }
         );
     }
-}*/
+}
+
+module.exports = ContractSignatory;
