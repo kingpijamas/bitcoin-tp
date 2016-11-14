@@ -25,12 +25,8 @@ module.exports = function generateControllerController(req, res) {
             var contractIncomplete = startContract(originPrivKey, destPubKey, condition, amountToMultisig);
 
             contractIncomplete.then((contract) =>
-                //console.log(contract.incompleteTx.toJSON().toString())
                 res.render('generate', {json: JSON.stringify(contract.incompleteTx.toJSON())})
             ).catch(console.log);
-
-
-            //res.render('generate', {title:'data generated', link: link, json:'{lalal}'});
         }
     }
 };

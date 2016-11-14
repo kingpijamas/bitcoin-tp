@@ -11,24 +11,17 @@ module.exports = function homeControllerController(req, res) {
 
     const showError = (contract) => {
         if (contract == null) {
-            res.render('validate', {isSigned: 'No', isValid: 'The condition is not valid'})
+            res.render('validate', {isSigned: 'none', isValid: false})
         }
     };
 
     const showSignatureResult = (fullySigned, valid) => {
-        var validation = null;
-        if (valid) {
-            validation = 'The condition is valid';
-        } else {
-            validation = 'The condition is not valid';
-        }
-
         if (fullySigned) {
-            res.render('validate', {isSigned: 'Signed by oracle and destination', isValid: validation})
+            res.render('validate', {isSigned: 'all', isValid: valid})
         } else {
-            res.render('validate', {isSigned: 'Not fully signed', isValid: validation})
+            res.render('validate', {isSigned: 'partially', isValid: valid})
         }
-    }
+    };
 
     if (req.method === "GET") {
         res.render('validate');
@@ -48,7 +41,6 @@ module.exports = function homeControllerController(req, res) {
                     validCondition = true;
                 }
 
-                var contractSignedByDestination = null;
                 if (validCondition) {
                     var contractSignedByDestination = signByDestination(destPrivKey, contractSignedByOracle);
                     var fullySigned = contractSignedByDestination.incompleteTx.isFullySigned();

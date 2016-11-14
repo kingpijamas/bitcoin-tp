@@ -24,17 +24,17 @@ html(lang='en')
                         span.icon-bar
                         span.icon-bar
                         span.icon-bar
-                    a.navbar-brand(href='/home/controller') Bitcoin Contract
+                    a.navbar-brand(href='/home') Bitcoin Contract
                 .navbar-collapse.collapse
                     ul.nav.navbar-nav
                         li
-                            a(href='/home/controller') Home
+                            a(href='/home') Home
                         li.active
                             a(href='#') Generate Contract
                         li
-                            a(href='/validate/controller') Validate Contract
+                            a(href='/validate') Validate Contract
         .container
-            form.form-signin(role='form', name='generateForm', method='POST', action="/generate/controller")
+            form.form-signin(role='form', name='generateForm', method='POST', action="/generate")
                 h2.form-signin-heading Please fill the info
                 input.form-control(type='text', name='privkeyWIF', placeholder='PrivKey WIF', required='true', autofocus='')
                 input.form-control(type='text', name='destPubKey', placeholder='Destination Public Key', required='true')
@@ -44,8 +44,8 @@ html(lang='en')
                     label
                         input(type='checkbox', value='accept')
                         |  I accept the terms and conditions
-                button.btn.btn-lg.btn-primary.btn-block(type='submit', name="bet", value="bet") Bet money
-                button.btn.btn-lg.btn-primary.btn-block(type='submit', name="contract", value="contract") Make contract
+                button.btn.btn-lg.btn-primary.btn-block(type='submit', name="bet", value="bet") Generate contract (<b>you will incur in charges</b>)
+                button.btn.btn-lg.btn-primary.btn-block(type='submit', name="contract", value="contract") Get transferable copy
         .container
             .content
                 .withMargin
@@ -54,7 +54,7 @@ html(lang='en')
                             tr
                                 td Address link
                                 td
-                                    a= link
+                                    a(href='#{link}')= link
                             tr
                                 td Transaction JSON
                                 td
