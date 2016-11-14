@@ -15,8 +15,6 @@ router.get('/home/controller', controller('home/controller'));
 router.get('/generate/controller', controller('generate/controller'));
 router.post('/generate/controller',controller('generate/controller'));
 router.get('/validate/controller', controller('validate/controller'));
-router.post('/validate/controller', function(req, res){
-    console.log("Post validate");
-});
+router.post('/validate/controller', controller('validate/controller'));
 
 module.exports = router;
