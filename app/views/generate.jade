@@ -11,6 +11,7 @@ html(lang='en')
         link(href='/bootstrap-3.3.1/dist/css/bootstrap.min.css', rel='stylesheet')
         //link(href='/bootstrap-3.3.1/dist/css/bootstrap-theme.min.css', rel='stylesheet')
         link(href='/bootstrap-3.3.1/docs/examples/theme.css', rel='stylesheet')
+        link(href='/stylesheet/style.css', rel='stylesheet')
         script(src='/bootstrap-3.3.1/docs/assets/js/ie-emulation-modes-warning.js')
         script(src='/bootstrap-3.3.1/docs/assets/js/ie10-viewport-bug-workaround.js')
     body(role='document')
@@ -45,11 +46,20 @@ html(lang='en')
                         |  I accept the terms and conditions
                 button.btn.btn-lg.btn-primary.btn-block(type='submit', name="bet", value="bet") Bet money
                 button.btn.btn-lg.btn-primary.btn-block(type='submit', name="contract", value="contract") Make contract
-
         .container
-            h1= title
-            p= link
-            p= json
+            .content
+                .withMargin
+                    table.table.table-striped
+                        tbody
+                            tr
+                                td Address link
+                                td
+                                    p= link
+                            tr
+                                td Transaction JSON
+                                td
+                                    p= json
+
         // Bootstrap core JavaScript
         // ==================================================
         // Placed at the end of the document so the pages load faster

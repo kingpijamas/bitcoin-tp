@@ -10,7 +10,7 @@ const Insight = bitcoreExplorers.Insight;
 
 const network = 'testnet';
 
-class Origin extends ContractSignatory { // 'grandparent'
+/*class Origin extends ContractSignatory { // 'grandparent'
 
     startContract({condition, amountDest, amountFee, dest, pubKeys}) {
         // FIXME: change this for custom JSON evaluation!
@@ -64,4 +64,4 @@ class Origin extends ContractSignatory { // 'grandparent'
         }).catch(console.log);
     }
 
-}
+}*/
