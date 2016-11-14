@@ -15,3 +15,7 @@ commons.service = function service(serviceName) {
 commons.repository = function repository(repoName) {
     return require(path.join(__dirname, 'repositories', repoName));
 };
+
+commons.model = function model(modelName) {
+    return require(path.join(__dirname, 'models', modelName));
+};

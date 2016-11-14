@@ -1,0 +1,66 @@
+doctype html
+html(lang='en')
+    head
+        meta(charset='utf-8')
+        meta(http-equiv='X-UA-Compatible', content='IE=edge')
+        meta(name='viewport', content='width=device-width, initial-scale=1')
+        meta(name='description', content='')
+        meta(name='author', content='')
+        link(rel='icon', href='{pathToAssets}/docs/favicon.ico')
+        title Bitcoin Oracle By Jp, Tere & Vale
+        link(href='/stylesheet/style.css', rel='stylesheet')
+        link(href='/bootstrap-3.3.1/dist/css/bootstrap.min.css', rel='stylesheet')
+        //link(href='/bootstrap-3.3.1/dist/css/bootstrap-theme.min.css', rel='stylesheet')
+        link(href='/bootstrap-3.3.1/docs/examples/theme.css', rel='stylesheet')
+        script(src='/bootstrap-3.3.1/docs/assets/js/ie-emulation-modes-warning.js')
+        script(src='/bootstrap-3.3.1/docs/assets/js/ie10-viewport-bug-workaround.js')
+    body(role='document')
+        // Fixed navbar
+        .navbar.navbar-inverse.navbar-fixed-top(role='navigation')
+            .container
+                .navbar-header
+                    button.navbar-toggle(type='button', data-toggle='collapse', data-target='.navbar-collapse')
+                        span.sr-only Toggle navigation
+                        span.icon-bar
+                        span.icon-bar
+                        span.icon-bar
+                    a.navbar-brand(href='/home/controller') Bitcoin Contract
+                .navbar-collapse.collapse
+                    ul.nav.navbar-nav
+                        li
+                            a(href = '/home/controller') Home
+                        li
+                            a(href = '/generate/controller') Generate Contract
+                        li.active
+                            a(href = '#validate') Validate Contract
+        .container
+            form.form-signin(role = 'form', name = 'validateForm', method = 'POST', action = "/validate/controller")
+                h2.form-signin-heading Please fill the info
+                input.form-control(type = 'text', name = 'privkeyWIF', placeholder = 'PrivKey WIF', required = 'true')
+                input.form-control(type = 'textarea', name = 'incompleteTr', placeholder = 'Incomplete Transaction', required = 'true', autofocus = '')
+                input.form-control(type = 'text', name = 'condition', placeholder = 'Condition', required='true')
+                input.form-control(type = 'text', name = 'amountForDest', placeholder = 'Amount', required= 'true')
+                .checkbox
+                    label
+                        input(type='checkbox', value='accept')
+                        |  I accept the terms and conditions
+                button.btn.btn-lg.btn-primary.btn-block(type='submit', name="validate", value="validate") Validate contract and Sign
+        .container
+            .content
+                .withMargin
+                    table.table.table-striped
+                        tbody
+                            tr
+                                td ¿Valid?
+                                td
+                                    p= isValid
+                            tr
+                                td ¿Signed?
+                                td
+                                    p= isSigned
+        // Bootstrap core JavaScript
+        // ==================================================
+        // Placed at the end of the document so the pages load faster
+        script(src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js')
+        script(src='/bootstrap-3.3.1/dist/js/bootstrap.min.js')
+        script(src='/bootstrap-3.3.1/docs/assets/js/vendor/holder.js')
